@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from 'jspdf';
 
 const Index = () => {
+  const navigate = useNavigate();
   const { getDashboardStats, getPatientsByFilter } = usePatients();
   const { toast } = useToast();
   const stats = getDashboardStats();
@@ -22,7 +24,7 @@ const Index = () => {
   const handleStatsClick = (type: "all" | "discharged" | "pending" | "critical", title: string) => {
     if (type === "all") {
       // Navigate to Patient Management
-      window.location.href = "/patients";
+      navigate("/patients");
     } else {
       setActiveWidget({ type, title });
     }
