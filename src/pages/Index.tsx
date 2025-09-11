@@ -7,6 +7,7 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { StatsWidget } from "@/components/dashboard/StatsWidget";
 import { usePatients } from "@/hooks/usePatients";
 import { useToast } from "@/hooks/use-toast";
+import { jsPDF } from 'jspdf';
 
 const Index = () => {
   const { getDashboardStats, getPatientsByFilter } = usePatients();
@@ -28,9 +29,64 @@ const Index = () => {
   };
 
   const handleGenerateReport = () => {
+    const doc = new jsPDF();
+    const currentDate = new Date().toLocaleDateString('en-IN');
+    
+    // Header
+    doc.setFontSize(20);
+    doc.text('Hospital Dashboard Report', 20, 30);
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${currentDate}`, 20, 45);
+    
+    // Summary Statistics
+    doc.setFontSize(16);
+    doc.text('Summary Statistics', 20, 65);
+    doc.setFontSize(12);
+    doc.text(`Total Patients: ${stats.totalPatients}`, 20, 80);
+    doc.text(`Discharged Today: ${stats.dischargedToday}`, 20, 90);
+    doc.text(`Pending Discharge: ${stats.pendingDischarge}`, 20, 100);
+    doc.text(`Critical Cases: ${stats.criticalCases}`, 20, 110);
+    
+    // Patient Details Table Header
+    doc.setFontSize(16);
+    doc.text('Patient Details', 20, 130);
+    
+    // Table headers
+    doc.setFontSize(10);
+    const headers = ['Name', 'Room', 'Status', 'Doctor', 'Expected Discharge'];
+    let yPos = 145;
+    
+    // Draw table headers
+    doc.text(headers[0], 20, yPos);
+    doc.text(headers[1], 60, yPos);
+    doc.text(headers[2], 90, yPos);
+    doc.text(headers[3], 120, yPos);
+    doc.text(headers[4], 160, yPos);
+    
+    yPos += 10;
+    
+    // Draw table data
+    const allPatients = getPatientsByFilter("all");
+    allPatients.forEach((patient, index) => {
+      if (yPos > 270) { // Start new page if needed
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      doc.text(patient.name, 20, yPos);
+      doc.text(patient.room, 60, yPos);
+      doc.text(patient.status, 90, yPos);
+      doc.text(patient.doctor, 120, yPos);
+      doc.text(patient.expectedDischarge, 160, yPos);
+      yPos += 10;
+    });
+    
+    // Save the PDF
+    doc.save(`hospital-dashboard-report-${currentDate.replace(/\//g, '-')}.pdf`);
+    
     toast({
       title: "Report Generated",
-      description: "Daily discharge report has been generated successfully.",
+      description: "Daily discharge report has been downloaded successfully.",
     });
   };
 
