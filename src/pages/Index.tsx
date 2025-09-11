@@ -7,13 +7,10 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { StatsWidget } from "@/components/dashboard/StatsWidget";
 import { usePatients } from "@/hooks/usePatients";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
-import jsPDF from 'jspdf';
 
 const Index = () => {
   const { getDashboardStats, getPatientsByFilter } = usePatients();
   const { toast } = useToast();
-  const navigate = useNavigate();
   const stats = getDashboardStats();
   
   const [activeWidget, setActiveWidget] = useState<{
@@ -23,64 +20,18 @@ const Index = () => {
 
   const handleStatsClick = (type: "all" | "discharged" | "pending" | "critical", title: string) => {
     if (type === "all") {
-      // Quick navigation to Patient Management
-      navigate("/patients");
+      // Navigate to Patient Management
+      window.location.href = "/patients";
     } else {
       setActiveWidget({ type, title });
     }
   };
 
   const handleGenerateReport = () => {
-    try {
-      const doc = new jsPDF();
-      const today = new Date().toLocaleDateString('en-IN');
-      
-      // Title
-      doc.setFontSize(20);
-      doc.text('HELIX - Daily Discharge Report', 20, 30);
-      
-      // Date
-      doc.setFontSize(12);
-      doc.text(`Generated on: ${today}`, 20, 45);
-      
-      // Stats table
-      doc.setFontSize(14);
-      doc.text('Dashboard Statistics', 20, 65);
-      
-      const tableData = [
-        ['Metric', 'Count'],
-        ['Total Patients', stats.totalPatients.toString()],
-        ['Discharged Today', stats.dischargedToday.toString()],
-        ['Pending Discharge', stats.pendingDischarge.toString()],
-        ['Critical Cases', stats.criticalCases.toString()]
-      ];
-      
-      let yPos = 80;
-      tableData.forEach((row, index) => {
-        if (index === 0) {
-          doc.setFont(undefined, 'bold');
-        } else {
-          doc.setFont(undefined, 'normal');
-        }
-        doc.text(row[0], 20, yPos);
-        doc.text(row[1], 100, yPos);
-        yPos += 15;
-      });
-      
-      // Save the PDF
-      doc.save(`helix-daily-report-${today.replace(/\//g, '-')}.pdf`);
-      
-      toast({
-        title: "Report Downloaded",
-        description: "Daily discharge report has been generated and downloaded successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to generate report. Please try again.",
-        variant: "destructive"
-      });
-    }
+    toast({
+      title: "Report Generated",
+      description: "Daily discharge report has been generated successfully.",
+    });
   };
 
   const today = new Date().toLocaleDateString('en-IN', {

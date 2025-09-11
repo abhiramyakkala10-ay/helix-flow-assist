@@ -57,7 +57,7 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white border-b shadow-sm">
+    <nav className="bg-card border-b shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
