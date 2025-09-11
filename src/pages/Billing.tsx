@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BillingRecord } from "@/types";
+import jsPDF from 'jspdf';
 
 const Billing = () => {
   const { toast } = useToast();
@@ -78,9 +79,175 @@ const Billing = () => {
     .reduce((sum, record) => sum + record.amount, 0);
 
   const handleExportBilling = () => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(32, 84, 147);
+    doc.text('HELIX Hospital - Billing Report', 20, 20);
+    
+    // Current date
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Generated on: ${new Date().toLocaleDateString('en-IN')}`, 20, 30);
+    
+    // Financial Summary
+    doc.setFontSize(14);
+    doc.text('Financial Summary', 20, 45);
+    doc.setFontSize(10);
+    doc.text(`Total Revenue: ₹${totalRevenue.toLocaleString('en-IN')}`, 20, 55);
+    doc.text(`Paid Amount: ₹${paidAmount.toLocaleString('en-IN')}`, 20, 65);
+    doc.text(`Pending Amount: ₹${pendingAmount.toLocaleString('en-IN')}`, 20, 75);
+    doc.text(`Overdue Amount: ₹${overdueAmount.toLocaleString('en-IN')}`, 20, 85);
+    
+    // Billing Records Table
+    doc.setFontSize(14);
+    doc.text('Billing Records', 20, 105);
+    
+    let yPos = 115;
+    doc.setFontSize(8);
+    doc.text('Bill ID', 20, yPos);
+    doc.text('Patient Name', 50, yPos);
+    doc.text('Amount (₹)', 100, yPos);
+    doc.text('Status', 130, yPos);
+    doc.text('Date', 155, yPos);
+    
+    yPos += 10;
+    billingRecords.forEach((record, index) => {
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.text(record.id, 20, yPos);
+      doc.text(record.patientName, 50, yPos);
+      doc.text(record.amount.toLocaleString('en-IN'), 100, yPos);
+      doc.text(record.status, 130, yPos);
+      doc.text(new Date(record.date).toLocaleDateString('en-IN'), 155, yPos);
+      yPos += 8;
+    });
+    
+    doc.save('billing-report.pdf');
     toast({
-      title: "Export Started",
-      description: "Billing report export is being prepared...",
+      title: "Report Downloaded",
+      description: "Billing report has been downloaded successfully.",
+    });
+  };
+
+  const handleGenerateInvoice = () => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(32, 84, 147);
+    doc.text('HELIX Hospital - Invoice', 20, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Invoice Date: ${new Date().toLocaleDateString('en-IN')}`, 20, 30);
+    doc.text('Invoice #: INV-2024-001', 20, 40);
+    
+    // Sample invoice data
+    doc.setFontSize(12);
+    doc.text('Bill To:', 20, 60);
+    doc.setFontSize(10);
+    doc.text('John Smith', 20, 70);
+    doc.text('Room: 101', 20, 80);
+    doc.text('Patient ID: P001', 20, 90);
+    
+    // Services
+    doc.setFontSize(12);
+    doc.text('Services:', 20, 110);
+    doc.setFontSize(10);
+    doc.text('Room Charges: ₹15,000', 30, 120);
+    doc.text('Medications: ₹5,750', 30, 130);
+    doc.text('Lab Tests: ₹5,000', 30, 140);
+    doc.text('Total Amount: ₹25,750', 30, 155);
+    
+    doc.save('invoice.pdf');
+    toast({
+      title: "Invoice Generated",
+      description: "Invoice has been generated and downloaded.",
+    });
+  };
+
+  const handleFinancialReport = () => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(32, 84, 147);
+    doc.text('HELIX Hospital - Financial Report', 20, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Report Period: ${new Date().toLocaleDateString('en-IN')}`, 20, 30);
+    
+    // Monthly Summary
+    doc.setFontSize(14);
+    doc.text('Monthly Financial Summary', 20, 50);
+    doc.setFontSize(10);
+    
+    const monthlyData = [
+      { category: 'Total Revenue', amount: totalRevenue },
+      { category: 'Collections', amount: paidAmount },
+      { category: 'Outstanding', amount: pendingAmount + overdueAmount },
+      { category: 'Collection Rate', amount: ((paidAmount / totalRevenue) * 100) }
+    ];
+    
+    let yPos = 65;
+    monthlyData.forEach(item => {
+      doc.text(`${item.category}:`, 20, yPos);
+      if (item.category === 'Collection Rate') {
+        doc.text(`${item.amount.toFixed(1)}%`, 100, yPos);
+      } else {
+        doc.text(`₹${item.amount.toLocaleString('en-IN')}`, 100, yPos);
+      }
+      yPos += 10;
+    });
+    
+    doc.save('financial-report.pdf');
+    toast({
+      title: "Financial Report Downloaded",
+      description: "Monthly financial report has been downloaded.",
+    });
+  };
+
+  const handleOverdueAlerts = () => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(220, 38, 38);
+    doc.text('HELIX Hospital - Overdue Alerts', 20, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Generated on: ${new Date().toLocaleDateString('en-IN')}`, 20, 30);
+    
+    const overdueRecords = billingRecords.filter(record => record.status === "Overdue");
+    
+    doc.setFontSize(14);
+    doc.text(`Total Overdue Amount: ₹${overdueAmount.toLocaleString('en-IN')}`, 20, 50);
+    doc.text(`Number of Overdue Bills: ${overdueRecords.length}`, 20, 65);
+    
+    doc.setFontSize(12);
+    doc.text('Overdue Bills:', 20, 85);
+    
+    let yPos = 100;
+    doc.setFontSize(10);
+    overdueRecords.forEach((record, index) => {
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.text(`${index + 1}. ${record.patientName} - ₹${record.amount.toLocaleString('en-IN')} (Due: ${new Date(record.date).toLocaleDateString('en-IN')})`, 20, yPos);
+      yPos += 15;
+    });
+    
+    doc.save('overdue-alerts.pdf');
+    toast({
+      title: "Overdue Report Downloaded",
+      description: "Overdue alerts report has been downloaded.",
     });
   };
 
@@ -265,7 +432,7 @@ const Billing = () => {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="cursor-pointer hover:shadow-medical transition-shadow">
+          <Card className="cursor-pointer hover:shadow-medical transition-shadow" onClick={handleGenerateInvoice}>
             <CardContent className="p-6 text-center">
               <CreditCard className="h-12 w-12 mx-auto mb-4 text-primary" />
               <h3 className="font-semibold mb-2">Generate Invoice</h3>
@@ -273,7 +440,7 @@ const Billing = () => {
             </CardContent>
           </Card>
           
-          <Card className="cursor-pointer hover:shadow-medical transition-shadow">
+          <Card className="cursor-pointer hover:shadow-medical transition-shadow" onClick={handleFinancialReport}>
             <CardContent className="p-6 text-center">
               <Download className="h-12 w-12 mx-auto mb-4 text-primary" />
               <h3 className="font-semibold mb-2">Financial Report</h3>
@@ -281,7 +448,7 @@ const Billing = () => {
             </CardContent>
           </Card>
           
-          <Card className="cursor-pointer hover:shadow-medical transition-shadow">
+          <Card className="cursor-pointer hover:shadow-medical transition-shadow" onClick={handleOverdueAlerts}>
             <CardContent className="p-6 text-center">
               <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-medical-red" />
               <h3 className="font-semibold mb-2">Overdue Alerts</h3>
