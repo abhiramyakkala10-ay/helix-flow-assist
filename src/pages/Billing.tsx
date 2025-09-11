@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BillingRecord } from "@/types";
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 
 const Billing = () => {
   const { toast } = useToast();
